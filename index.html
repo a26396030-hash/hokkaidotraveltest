@@ -243,9 +243,12 @@
                 <div class="space-y-6 max-h-[50vh] overflow-y-auto custom-scrollbar">
 
                     <div class="border border-purple-300 rounded-xl p-4 bg-purple-50 shadow-inner">
-                        <h3 class="text-xl font-bold text-purple-700 mb-3 flex items-center">
+                        <h3 class="text-xl font-bold text-purple-700 mb-2 flex items-center">
                             ✈️ 隨身/手提行李 ({{ carryonCount }})
                         </h3>
+                        <p class="text-sm text-red-500 font-semibold mb-3 border-b border-purple-200 pb-2">
+                            🚨 備註：每人上限 10 公斤
+                        </p>
                         <div class="space-y-2">
                             <div v-for="item in filteredPackingList('carryon')" :key="item.id"
                                  class="flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition duration-150">
@@ -268,9 +271,12 @@
                     </div>
 
                     <div class="border border-blue-300 rounded-xl p-4 bg-blue-50 shadow-inner">
-                        <h3 class="text-xl font-bold text-blue-700 mb-3 flex items-center">
+                        <h3 class="text-xl font-bold text-blue-700 mb-2 flex items-center">
                             🧳 托運行李 ({{ checkedCount }})
                         </h3>
+                         <p class="text-sm text-red-500 font-semibold mb-3 border-b border-blue-200 pb-2">
+                            🚨 備註：每人上限 25 公斤
+                        </p>
                         <div class="space-y-2">
                             <div v-for="item in filteredPackingList('checked')" :key="item.id"
                                  class="flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition duration-150">
@@ -303,7 +309,7 @@
                 
                 <div class="space-y-6">
                     <div class="p-4 bg-red-50 rounded-xl border-l-4 border-red-400 shadow-md">
-                        <p class="font-bold text-xl text-red-600 mb-2">🛫 12月6日 (週五) - 去程</p>
+                        <p class="font-bold text-xl text-red-600 mb-2">🛫 12月6日 (週六) - 去程</p>
                         <ul class="text-gray-700 space-y-1 text-base ml-4 list-disc">
                             <li><span class="font-semibold">航空公司/班號:</span> 台灣虎航 IT238</li>
                             <li><span class="font-semibold">起飛地:</span> 桃園國際機場 (TPE)</li>
@@ -314,7 +320,7 @@
                     </div>
 
                     <div class="p-4 bg-blue-50 rounded-xl border-l-4 border-blue-400 shadow-md">
-                        <p class="font-bold text-xl text-blue-600 mb-2">🛬 12月10日 (週二) - 回程</p>
+                        <p class="font-bold text-xl text-blue-600 mb-2">🛬 12月10日 (週三) - 回程</p>
                         <ul class="text-gray-700 space-y-1 text-base ml-4 list-disc">
                             <li><span class="font-semibold">航空公司/班號:</span> 台灣虎航 IT239</li>
                             <li><span class="font-semibold">起飛地:</span> 函館機場 (HKD)</li>
@@ -462,15 +468,21 @@
         setup() {
             // --- 1. Tab & Navigation State ---
             const currentTab = ref('day1');
+            const dayMapNames = {
+                'day1': '第一天 (12/6 週六)', 
+                'day2': '第二天 (12/7 週日)', 
+                'day3': '第三天 (12/8 週一)', 
+                'day4': '第四天 (12/9 週二)', 
+                'day5': '第五天 (12/10 週三)', 
+                'flight': '航班資訊',
+                'accounting': '記帳系統', 
+                'packing': '必帶物品清單'
+            };
+
             const dayName = computed(() => {
-                const dayMap = {
-                    'day1': '第一天 (12/6)', 'day2': '第二天 (12/7)', 'day3': '第三天 (12/8)', 
-                    'day4': '第四天 (12/9)', 'day5': '第五天 (12/10)', 
-                    'flight': '航班資訊',
-                    'accounting': '記帳系統', 'packing': '必帶物品清單'
-                };
-                return dayMap[currentTab.value] || '行程';
+                return dayMapNames[currentTab.value] || '行程';
             });
+            
             const tabs = [
                 { id: 'day1', name: '12/6', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
                 { id: 'day2', name: '12/7', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
