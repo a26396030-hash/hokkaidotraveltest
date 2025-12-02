@@ -87,6 +87,13 @@
         <div class="bg-white p-6 rounded-xl shadow-2xl relative custom-scrollbar overflow-y-auto max-h-[80vh]">
 
             <div v-if="currentTab.startsWith('day')" class="min-h-[400px] relative">
+                
+                <button v-if="currentTab === 'day1'" @click="showFlightModal = true"
+                        class="mb-4 w-full py-2 bg-red-500 text-white rounded-lg font-bold shadow-lg hover:bg-red-600 transition duration-200 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                    航班資訊 ✈️ (點擊查看)
+                </button>
+                
                 <h2 class="text-2xl font-bold text-blue-800 border-b-2 border-blue-200 pb-3 mb-4 flex items-center">
                     {{ dayName }} 行程表 <span class="text-lg ml-3 text-blue-500">（點擊編輯按鈕即可修改）</span>
                 </h2>
@@ -353,6 +360,52 @@
             </div>
         </div>
     </transition>
+    <transition name="modal">
+        <div v-if="showFlightModal" class="modal-overlay" @click.self="showFlightModal = false">
+            <div class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-lg mx-auto transform transition-all duration-300 scale-100" @click.stop>
+                <div class="flex justify-between items-center border-b pb-3 mb-4">
+                    <h3 class="text-xl font-bold text-red-700 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.168 1.342L10 18.577l7.553-1.682a1 1 0 00.518-1.579l-7-14z"/></svg>
+                        航班資訊詳情
+                    </h3>
+                    <button @click="showFlightModal = false" class="text-gray-400 hover:text-gray-600 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="p-4 bg-red-50 rounded-lg border-l-4 border-red-400 shadow-sm">
+                        <p class="font-bold text-lg text-red-600 mb-2">🛫 12月6日 (週五) - 去程</p>
+                        <ul class="text-gray-700 space-y-1 text-sm">
+                            <li><span class="font-semibold">航空公司/班號:</span> 台灣虎航 IT238</li>
+                            <li><span class="font-semibold">起飛地:</span> 桃園國際機場 (TPE)</li>
+                            <li><span class="font-semibold">目的地:</span> 旭川機場 (AKJ)</li>
+                            <li><span class="font-semibold">預計起飛/抵達:</span> 09:30 / 14:30 (時間以實際機票為主)</li>
+                            <li><span class="font-semibold text-blue-500">備註:</span> 抵達旭川後需前往洞爺湖，請預留充足轉車時間。</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400 shadow-sm">
+                        <p class="font-bold text-lg text-blue-600 mb-2">🛬 12月10日 (週二) - 回程</p>
+                        <ul class="text-gray-700 space-y-1 text-sm">
+                            <li><span class="font-semibold">航空公司/班號:</span> 台灣虎航 IT239</li>
+                            <li><span class="font-semibold">起飛地:</span> 函館機場 (HKD)</li>
+                            <li><span class="font-semibold">目的地:</span> 桃園國際機場 (TPE)</li>
+                            <li><span class="font-semibold">預計起飛/抵達:</span> 15:30 / 19:30 (時間以實際機票為主)</li>
+                            <li><span class="font-semibold text-red-500">備註:</span> 需提前從市區前往函館機場，注意退房時間。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex justify-end mt-4">
+                    <button @click="showFlightModal = false"
+                            class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg font-semibold hover:bg-gray-400 transition">
+                        關閉
+                    </button>
+                </div>
+            </div>
+        </div>
+    </transition>
     </div>
 
 <script type="module">
@@ -394,19 +447,31 @@
     
     // --- 預設景點介紹資料 ---
     const defaultDescriptions = {
+        '桃園機場 ✈️ 旭川機場 (午餐機上或機場)': '從台灣桃園國際機場出發，搭乘班機飛往北海道旭川機場。午餐通常在機上或抵達機場後自行解決。',
+        '旭川機場搭車/租車前往洞爺湖': '抵達旭川後，將搭乘交通工具前往洞爺湖溫泉區。路程較長，建議提前安排好交通方式。',
+        '夜宿 洞爺 湖畔亭 (晚餐: 溫泉旅館)': '入住位於洞爺湖畔的溫泉旅館，享受日式晚餐和溫泉設施。湖畔的景色宜人，非常適合放鬆身心。',
         '洞爺湖冬季彩燈節 ❄️': '每年冬季舉辦的彩燈隧道，將溫泉街點綴得浪漫迷人。這是夜晚活動的亮點，非常適合飯後散步拍照。',
+        '洞爺湖出發，前往小樽': '享用早餐後，從洞爺湖出發，前往充滿歐洲風情的港口城市小樽。沿途可欣賞北海道的冬季風光。',
         '小樽運河、音樂盒堂、北一硝子館': '小樽運河是城市最具代表性的地標，沿岸的石造倉庫充滿懷舊氣息。附近遍佈玻璃工藝和音樂盒商店，是購買伴手禮的好去處。',
         '午餐後，AEON MALL (札幌小樽沿線) 購物/休息': 'AEON MALL是日本的大型購物中心，提供各式服飾、日用品與美食廣場，是輕鬆購物和補給的好地方。',
+        '夜宿 宜必思尚品札幌酒店': '抵達札幌市區後，入住酒店。酒店位置方便，鄰近市中心主要景點和交通樞紐。',
         '晚餐後，夜訪貍小路 商店街 (購物/宵夜)': '貍小路是札幌歷史最悠久、規模最大的商店街之一，橫跨多個街區，無論是藥妝、紀念品或特色餐廳都一應俱全。',
+        '時計台、北海道廳舊本廳舍 (車經/拍照)': '車經札幌的經典地標：時計台和紅磚建造的北海道廳舊本廳舍，都是拍照留念的好地方。',
         '北海道神宮 (參拜)': '北海道神宮是北海道最重要且規模最大的神社，供奉著開拓之神，常有當地居民及遊客前來祈求開拓發展與良緣。',
         '午餐及免稅商店 (札幌市區)': '此處通常為團體遊客安排的購物點，方便購買保健食品、電子產品等，記得檢查價格與需求。',
-        '開車前往尼克斯海洋公園 (登別)': '尼克斯海洋公園是一座以丹麥中世紀城堡為主題的海洋樂園，擁有壯觀的「水晶塔」水族館和招牌的企鵝遊行。',
-        '尼克斯海洋公園 🐬 (企鵝遊行等)': '園內最受歡迎的活動是可愛的企鵝遊行，它們搖搖擺擺地在步道上行走，是不可錯過的畫面。',
+        '開車前往尼克斯海洋公園 (登別)': '驅車前往登別，尼克斯海洋公園是一座以丹麥中世紀城堡為主題的海洋樂園。',
+        '尼克斯海洋公園 🐬 (企鵝遊行等)': '園內最受歡迎的活動是可愛的企鵝遊行，它們搖搖擺擺地在步道上行走，還有壯觀的「水晶塔」水族館。',
+        '夜宿 森之庭渡假村 (晚餐: 溫泉渡假村)': '入住登別的溫泉渡假村，享受優質的溫泉浴和豐盛的自助晚餐，是緩解旅途疲勞的絕佳選擇。',
         '昭和新山、熊牧場 (與棕熊互動)': '昭和新山是於昭和年間經由火山噴發隆起的活火山，山腳下的熊牧場可以近距離觀察北海道特有的棕熊。',
+        '開車前往函館': '從登別出發，沿著海岸線或高速公路驅車前往北海道南部的函館市。',
         '大、小沼國立公園 (湖畔景觀)': '位於函館附近，以駒岳山為背景，湖中散佈著小島，冬季結冰後景色優美，提供雪地活動或欣賞冰湖美景。',
         '金森倉庫群 (海灣區購物)': '函館海灣邊的紅磚倉庫群，現在已改建為綜合商場，充滿異國風情，是函館最受歡迎的購物和美食區域。',
+        '入住 湯元 啄木亭': '在函館入住酒店，放下行李後可準備晚上的行程。這家酒店可能提供不錯的溫泉設施。',
         '函館山 百萬夜景 🌃': '被譽為世界三大夜景之一，從函館山頂俯瞰，城市兩側海灣的曲線形成獨特的「沙漏」或「葫蘆」形狀，極為壯觀。',
-        '元氣朝市 (海鮮朝市，享用海鮮丼)': '函館的著名海鮮市場，提供最新鮮的海產，可以在這裡享用豐盛的早餐海鮮丼，或體驗釣烏賊的樂趣。'
+        '元氣朝市 (海鮮朝市，享用海鮮丼)': '函館的著名海鮮市場，提供最新鮮的海產，可以在這裡享用豐盛的早餐海鮮丼，或體驗釣烏賊的樂趣。',
+        '退房，前往函館機場': '在規定的時間內從酒店退房，並前往函館機場準備搭乘回程班機。',
+        '函館機場 ✈️ 桃園機場 (賦歸)': '搭乘班機從函館機場返回台灣桃園機場，結束愉快的北海道五天四夜之旅。',
+        '無簡短介紹': '此項目為交通或住宿，無獨立景點介紹。'
     };
 
 
@@ -417,18 +482,18 @@
             const currentTab = ref('day1');
             const dayName = computed(() => {
                 const dayMap = {
-                    'day1': '第一天', 'day2': '第二天', 'day3': '第三天', 
-                    'day4': '第四天', 'day5': '第五天', 
+                    'day1': '第一天 (12/6)', 'day2': '第二天 (12/7)', 'day3': '第三天 (12/8)', 
+                    'day4': '第四天 (12/9)', 'day5': '第五天 (12/10)', 
                     'accounting': '記帳系統', 'packing': '必帶物品清單'
                 };
                 return dayMap[currentTab.value] || '行程';
             });
             const tabs = [
-                { id: 'day1', name: 'Day 1', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
-                { id: 'day2', name: 'Day 2', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
-                { id: 'day3', name: 'Day 3', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
-                { id: 'day4', name: 'Day 4', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
-                { id: 'day5', name: 'Day 5', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
+                { id: 'day1', name: '12/6', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
+                { id: 'day2', name: '12/7', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
+                { id: 'day3', name: '12/8', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
+                { id: 'day4', name: '12/9', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
+                { id: 'day5', name: '12/10', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
                 { id: 'accounting', name: '💰 記帳', inactiveClass: 'bg-yellow-100 text-green-700 hover:bg-yellow-200', activeClass: 'bg-green-600 text-white' },
                 { id: 'packing', name: '🎒 清單', inactiveClass: 'bg-purple-100 text-purple-700 hover:bg-purple-200', activeClass: 'bg-purple-600 text-white' },
             ];
@@ -440,7 +505,8 @@
                 activity, 
                 editing: false,
                 notes: '', // New field for user notes
-                description: defaultDescriptions[activity] || '無簡短介紹' // New field for pre-defined description
+                // 檢查是否有預設介紹，否則使用通用或自定義標籤
+                description: defaultDescriptions[activity] || '無簡短介紹'
             });
 
             const itineraryData = ref({
@@ -550,6 +616,9 @@
                 showNotesModal.value = false;
                 // 因為 selectedItem 是物件引用 (reference)，備註已經在 v-model 時自動更新到 itineraryData 了
             };
+            
+            // --- 2.2 Flight Info Modal Logic (NEW) ---
+            const showFlightModal = ref(false);
 
 
             // --- 3. Accounting System State & Logic ---
@@ -737,7 +806,7 @@
                     itinerary: itineraryData.value,
                     accounting: accountingData.value,
                     packing: packingList.value,
-                    version: '5-day-trip-v3' // 更新版本標籤以包含 description/notes
+                    version: '5-day-trip-v3' 
                 };
                 localStorage.setItem(APP_KEY, JSON.stringify(data));
             };
@@ -760,7 +829,7 @@
                                  if (typeof item.notes === 'undefined') {
                                      item.notes = '';
                                  }
-                                 if (typeof item.description === 'undefined') {
+                                 if (typeof item.description === 'undefined' || item.description === '無簡短介紹') {
                                      item.description = defaultDescriptions[item.activity] || '無簡短介紹';
                                  }
                              });
@@ -799,11 +868,13 @@
                 // Links
                 generateGoogleMapsUrl,
                 openLink,
-                // Notes Modal (New)
+                // Notes Modal
                 showNotesModal,
                 selectedItem,
                 openNotesModal,
                 closeNotesModal,
+                // Flight Modal (NEW)
+                showFlightModal,
                 // Accounting
                 exchangeRateTWD,
                 accountingData,
