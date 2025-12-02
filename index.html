@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北海道五天四夜・Vue 行程管理與清單</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        /* 自定義滾動條樣式，讓它在 Tailwind 預設外觀上更美觀 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #a1c4fd; /* primary blue light */
+            border-radius: 20px;
+            border: 2px solid transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f7f7f7;
+        }
+
+        /* 確保 Vue App 內容填滿容器 */
+        #app {
+            min-height: 100vh;
+            padding-bottom: 50px;
+            background: linear-gradient(to bottom, #a1c4fd 0%, #c2e9fb 100%);
+        }
+
+        /* 浮動天氣按鈕的動畫 */
+        .weather-float-btn {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .weather-float-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 自定義樣式來覆寫 Tailwind 某些情況下的樣式 */
+        .timeline-item > span:first-child {
+            font-size: 0.875rem; /* text-sm */
+            color: #4b5563; /* text-gray-700 */
+        }
+    </style>
+</head>
+<body>
+
+<div id="app" class="font-sans">
+    <div class="container mx-auto p-4 max-w-4xl">
+        
+        <header class="text-center bg-white p-6 rounded-3xl shadow-xl mb-6 border-4 border-white transform hover:scale-[1.01] transition duration-300">
+            <h1 class="text-3xl font-bold text-blue-700 mb-1">❄️ 北海道五天四夜・Vue 行程管理 ❄️</h1>
+            <p class="text-sm text-gray-500">正能量企鵝的開心雪國之旅 🐧</p>
+        </header>
+
+        <div class="flex justify-center flex-wrap gap-2 mb-6">
+            <button v-for="tab in tabs" :key="tab.id"
+                    @click="currentTab = tab.id"
+                    :class="[
+                        'tab-btn',
+                        'px-4 py-2 rounded-full font-semibold transition duration-200 shadow-md',
+                        currentTab === tab.id
+                            ? tab.activeClass
+                            : tab.inactiveClass
+                    ]">
+                {{ tab.name }}
+            </button>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-2xl relative custom-scrollbar overflow-y-auto max-h-[80vh]">
+
+            <div v-if="currentTab.startsWith('day')" class="min-h-[400px] relative">
+                <h2 class="text-2xl font-bold text-blue-800 border-b-2 border-blue-200 pb-3 mb-4 flex items-center">
+                    {{ dayName }} 行程表 <span class="text-lg ml-3 text-blue-500">（點擊編輯按鈕即可修改）</span>
+                </h2>
+
+                <div class="space-y-4">
+                    <div v-for="(item, index) in currentItinerary" :key="item.id"
+                         class="timeline-item bg-gray-50 p-4 rounded-lg shadow-sm border-l-4 border-blue-400 relative group transition duration-150 ease-in-out hover:shadow-md">
+                        
+                        <div v-if="item.editing" class="flex flex-col space-y-2">
+                            <input type="text" v-model="item.time" placeholder="時間 (例如: 08:00)"
+                                   class="p-2 border border-blue-300 rounded focus:ring-blue-500 focus:border-blue-500 text-base font-semibold"/>
+                            <textarea v-model="item.activity" placeholder="地點/活動詳情"
+                                      class="p-2 border border-blue-300 rounded focus:ring-blue-500 focus:border-blue-500 text-base h-20"></textarea>
+                            <div class="flex justify-end space-x-2 mt-2">
+                                <button @click="saveItem(item)" class="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 transition">儲存</button>
+                                <button @click="cancelEdit(item, index)" class="px-3 py-1 bg-gray-400 text-white rounded text-sm hover:bg-gray-500 transition">取消</button>
+                            </div>
+                        </div>
+
+                        <div v-else>
+                            <div class="font-bold text-lg text-blue-600">{{ item.time }}</div>
+                            <div class="text-gray-800 ml-1 mb-3">{{ item.activity }}</div>
+                            
+                            <div class="flex flex-wrap space-x-2 space-y-2 sm:space-y-0 mt-2">
+                                <button @click.stop="openLink(generateGoogleMapsUrl(item.activity))"
+                                        class="flex items-center text-sm px-3 py-1 bg-green-500 text-white rounded-full hover:bg-green-600 transition shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V14a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" transform="rotate(180 10 10)"/></svg>
+                                    地圖
+                                </button>
+                                <button @click.stop="openLink(generateWebsiteSearchUrl(item.activity))"
+                                        class="flex items-center text-sm px-3 py-1 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/></svg>
+                                    網站
+                                </button>
+                                <button @click.stop="editItem(item)"
+                                        class="flex items-center text-sm px-3 py-1 bg-gray-300 text-gray-700 rounded-full hover:bg-gray-400 transition shadow-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-8.28 8.28a2 2 0 01-1.414 1.414L4 14.586V16h1.414l2.293-2.293a2 2 0 011.414-1.414l.793-.793-2.828-2.828-.793.793zM12 15a1 1 0 100 2h3a1 1 0 100-2h-3z"/></svg>
+                                    編輯
+                                </button>
+                            </div>
+                        </div>
+
+                        <button @click="deleteItem(item.id)"
+                                class="absolute right-2 top-2 p-1 text-red-500 opacity-0 group-hover:opacity-100 transition duration-300 hover:text-red-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
+                    
+                    <div v-if="currentItinerary.length === 0" class="text-center text-gray-400 py-10">
+                        今日行程尚未規劃，點擊下方按鈕新增第一個項目。
+                    </div>
+                </div>
+                
+                <button @click="openAddItem"
+                        class="mt-6 w-full py-3 bg-blue-500 text-white rounded-lg font-bold shadow-lg hover:bg-blue-600 transition duration-200 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                    新增行程項目
+                </button>
+            </div>
+
+            <div v-else-if="currentTab === 'accounting'" class="min-h-[400px]">
+                <h2 class="text-2xl font-bold text-green-700 border-b-2 border-green-200 pb-3 mb-4">
+                    記帳系統 <span class="text-lg text-green-500"> (匯率: 1 JPY ≈ {{ exchangeRateTWD.toFixed(4) }} TWD)</span>
+                </h2>
+
+                <div class="grid grid-cols-2 gap-4 mb-6 text-center">
+                    <div class="bg-blue-50 p-4 rounded-xl shadow-inner border border-blue-200">
+                        <p class="text-lg font-medium text-gray-600">總花費 (日幣)</p>
+                        <p class="text-3xl font-extrabold text-blue-600 mt-1">{{ totalJPY.toLocaleString() }} ¥</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-xl shadow-inner border border-green-200">
+                        <p class="text-lg font-medium text-gray-600">總花費 (台幣)</p>
+                        <p class="text-3xl font-extrabold text-green-600 mt-1">{{ totalTWD.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }} $</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-100 p-4 rounded-lg mb-6 shadow">
+                    <h3 class="font-bold text-gray-700 mb-3">新增交易</h3>
+                    <div class="flex space-x-3">
+                        <input type="text" v-model="newTransaction.description" placeholder="項目描述 (例如: 晚餐)"
+                               class="p-2 border border-gray-300 rounded flex-1 focus:ring-indigo-500" />
+                        <input type="number" v-model.number="newTransaction.amountJPY" placeholder="金額 (JPY)"
+                               class="p-2 border border-gray-300 rounded w-24 focus:ring-indigo-500" />
+                        <select v-model="newTransaction.category"
+                                class="p-2 border border-gray-300 rounded w-32 focus:ring-indigo-500">
+                            <option value="">選擇類別</option>
+                            <option value="Food">餐飲 🍜</option>
+                            <option value="Shopping">購物 🛍️</option>
+                            <option value="Transport">交通 🚌</option>
+                            <option value="Hotel">住宿 🏨</option>
+                            <option value="Other">其他 💡</option>
+                        </select>
+                        <button @click="addTransaction"
+                                class="px-4 py-2 bg-indigo-500 text-white rounded font-semibold hover:bg-indigo-600 transition">
+                            新增
+                        </button>
+                    </div>
+                    <p v-if="newTransaction.amountJPY > 0" class="text-xs text-right text-gray-500 mt-1">
+                        約 {{ (newTransaction.amountJPY * exchangeRateTWD).toFixed(0) }} TWD
+                    </p>
+                </div>
+
+                <div class="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
+                    <div v-for="tx in sortedAccountingData" :key="tx.id"
+                         class="flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition duration-150">
+                        <div>
+                            <span :class="['text-xs font-semibold px-2 py-1 rounded-full mr-2', getCategoryColor(tx.category)]">{{ getCategoryEmoji(tx.category) }}</span>
+                            <span class="font-medium text-gray-800">{{ tx.description }}</span>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-red-500">{{ tx.amountJPY.toLocaleString() }} ¥</p>
+                            <p class="text-xs text-gray-500"> ≈ {{ tx.amountTWD.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }} $</p>
+                        </div>
+                        <button @click="deleteTransaction(tx.id)" class="text-gray-400 hover:text-red-500 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else-if="currentTab === 'packing'" class="min-h-[400px]">
+                <h2 class="text-2xl font-bold text-purple-700 border-b-2 border-purple-200 pb-3 mb-4">
+                    必帶物品清單 🎒
+                </h2>
+
+                <div class="flex space-x-2 mb-4">
+                    <input type="text" v-model="newItemName" placeholder="新增物品..."
+                           @keyup.enter="addPackingItem"
+                           class="p-2 border border-gray-300 rounded flex-1 focus:ring-purple-500" />
+                    <button @click="addPackingItem"
+                            class="px-4 py-2 bg-purple-500 text-white rounded font-semibold hover:bg-purple-600 transition">
+                        新增
+                    </button>
+                </div>
+
+                <div class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
+                    <div v-for="item in packingList" :key="item.id"
+                         class="flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition duration-150">
+                        
+                        <div class="flex items-center flex-1 cursor-pointer" @click="togglePackingItem(item.id)">
+                            <input type="checkbox" :checked="item.packed"
+                                   class="form-checkbox h-5 w-5 text-purple-600 rounded-sm mr-3 focus:ring-purple-500"
+                                   @change.stop="togglePackingItem(item.id)">
+                            <span :class="{'line-through text-gray-400': item.packed, 'text-gray-800 font-medium': !item.packed}">
+                                {{ item.name }}
+                            </span>
+                        </div>
+                        
+                        <button @click="deletePackingItem(item.id)" class="text-gray-400 hover:text-red-500 transition p-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-sm text-gray-600">
+                    <p>已打包: <span class="font-bold text-green-600">{{ packedCount }}</span> / 總項目: <span class="font-bold">{{ packingList.length }}</span></p>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    
+    <div v-if="weatherDisplay && currentTab.startsWith('day')"
+         class="fixed bottom-4 right-4 z-50">
+        
+        <div @click="toggleWeatherDetail"
+             class="weather-float-btn bg-yellow-400 text-white w-16 h-16 rounded-full flex flex-col items-center justify-center text-xs shadow-lg ring-4 ring-white">
+            <span class="text-2xl">{{ weatherDisplay.icon }}</span>
+            <span class="font-bold">{{ weatherDisplay.temp }}°C</span>
+        </div>
+        
+        <div v-if="showWeatherDetail"
+             class="absolute right-0 bottom-20 z-20 p-4 bg-white rounded-xl shadow-xl border-2 border-blue-400 w-48 transition-all duration-300 transform origin-bottom-right">
+            <p class="font-bold text-blue-700">{{ weatherDisplay.location }}</p>
+            <p class="text-4xl my-1">{{ weatherDisplay.icon }}</p>
+            <p class="text-3xl font-extrabold text-gray-800">{{ weatherDisplay.temp }}°C</p>
+            <p class="text-sm text-gray-500">{{ weatherDisplay.desc }}</p>
+            <button @click="showWeatherDetail = false" class="text-xs text-red-500 mt-2">關閉</button>
+        </div>
+        
+    </div>
+    </div>
+
+<script type="module">
+    const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
+
+    const APP_KEY = 'hokkaido_trip_v3';
+    
+    // --- 天氣相關設定 (更新為五天行程) ---
+    const weatherLocations = {
+        'day1': { location: '洞爺湖', lat: 42.55, lon: 140.83, desc: '湖畔溫泉區' },
+        'day2': { location: '札幌', lat: 43.06, lon: 141.35, desc: '城市市區/狸小路' }, 
+        'day3': { location: '登別', lat: 42.49, lon: 141.13, desc: '溫泉渡假村/海洋公園' },
+        'day4': { location: '函館', lat: 41.77, lon: 140.73, desc: '函館夜景區' },
+        'day5': { location: '函館', lat: 41.77, lon: 140.73, desc: '元氣朝市/機場' } 
+    };
+
+    function getWeatherIcon(code) {
+        if (code <= 1) return "☀️"; 
+        if (code <= 3) return "☁️"; 
+        if (code <= 48) return "🌫️"; 
+        if (code <= 67) return "🌧️"; 
+        if (code <= 77) return "❄️"; 
+        if (code <= 82) return "🌨️"; 
+        if (code <= 86) return "🌨️"; 
+        if (code <= 99) return "⛈️"; 
+        return "❄️"; 
+    }
+    
+    // --- 連結產生 Helper Functions ---
+    const generateGoogleMapsUrl = (activity) => {
+        // 使用 "北海道" + 活動名稱 進行地圖查詢
+        const query = encodeURIComponent(`北海道 ${activity}`);
+        return `https://www.google.com/maps/search/?api=1&query=${query}`;
+    };
+
+    const generateWebsiteSearchUrl = (activity) => {
+        // 使用 Google 搜尋來找官方網站連結
+        const query = encodeURIComponent(`北海道 ${activity} 官方網站`);
+        return `https://www.google.com/search?q=${query}`;
+    };
+    
+    const openLink = (url) => {
+        window.open(url, '_blank');
+    };
+
+
+    // --- Vue App Setup ---
+    createApp({
+        setup() {
+            // --- 1. Tab & Navigation State (更新為五天) ---
+            const currentTab = ref('day1');
+            const dayName = computed(() => {
+                const dayMap = {
+                    'day1': '第一天', 'day2': '第二天', 'day3': '第三天', 
+                    'day4': '第四天', 'day5': '第五天', 
+                    'accounting': '記帳系統', 'packing': '必帶物品清單'
+                };
+                return dayMap[currentTab.value] || '行程';
+            });
+            const tabs = [
+                { id: 'day1', name: 'Day 1', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
+                { id: 'day2', name: 'Day 2', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
+                { id: 'day3', name: 'Day 3', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
+                { id: 'day4', name: 'Day 4', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
+                { id: 'day5', name: 'Day 5', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
+                { id: 'accounting', name: '💰 記帳', inactiveClass: 'bg-yellow-100 text-green-700 hover:bg-yellow-200', activeClass: 'bg-green-600 text-white' },
+                { id: 'packing', name: '🎒 清單', inactiveClass: 'bg-purple-100 text-purple-700 hover:bg-purple-200', activeClass: 'bg-purple-600 text-white' },
+            ];
+
+            // --- 2. Itinerary State & Logic (更新為五天行程) ---
+            const itineraryData = ref({
+                day1: [
+                    { id: Date.now() + 1, time: '10:00', activity: '桃園機場 ✈️ 旭川機場 (午餐機上或機場)', editing: false },
+                    { id: Date.now() + 2, time: '15:00', activity: '旭川機場搭車/租車前往洞爺湖', editing: false },
+                    { id: Date.now() + 3, time: '18:30', activity: '夜宿 洞爺 湖畔亭 (晚餐: 溫泉旅館)', editing: false },
+                    { id: Date.now() + 4, time: '20:30', activity: '洞爺湖冬季彩燈節 ❄️', editing: false },
+                ],
+                day2: [
+                    { id: Date.now() + 5, time: '09:00', activity: '洞爺湖出發，前往小樽', editing: false },
+                    { id: Date.now() + 6, time: '11:30', activity: '小樽運河、音樂盒堂、北一硝子館', editing: false },
+                    { id: Date.now() + 7, time: '14:00', activity: '午餐後，AEON MALL (札幌小樽沿線) 購物/休息', editing: false },
+                    { id: Date.now() + 8, time: '18:00', activity: '夜宿 宜必思尚品札幌酒店', editing: false },
+                    { id: Date.now() + 9, time: '20:00', activity: '晚餐後，夜訪貍小路 商店街 (購物/宵夜)', editing: false },
+                ],
+                day3: [
+                    { id: Date.now() + 10, time: '09:00', activity: '時計台、北海道廳舊本廳舍 (車經/拍照)', editing: false },
+                    { id: Date.now() + 11, time: '10:30', activity: '北海道神宮 (參拜)', editing: false },
+                    { id: Date.now() + 12, time: '12:00', activity: '午餐及免稅商店 (札幌市區)', editing: false },
+                    { id: Date.now() + 13, time: '14:30', activity: '開車前往尼克斯海洋公園 (登別)', editing: false },
+                    { id: Date.now() + 14, time: '16:30', activity: '尼克斯海洋公園 🐬 (企鵝遊行等)', editing: false },
+                    { id: Date.now() + 15, time: '19:00', activity: '夜宿 森之庭渡假村 (晚餐: 溫泉渡假村)', editing: false },
+                ],
+                day4: [
+                    { id: Date.now() + 16, time: '09:00', activity: '昭和新山、熊牧場 (與棕熊互動)', editing: false },
+                    { id: Date.now() + 17, time: '11:00', activity: '開車前往函館', editing: false },
+                    { id: Date.now() + 18, time: '13:00', activity: '大、小沼國立公園 (湖畔景觀)', editing: false },
+                    { id: Date.now() + 19, time: '16:00', activity: '金森倉庫群 (海灣區購物)', editing: false },
+                    { id: Date.now() + 20, time: '18:00', activity: '入住 湯元 啄木亭', editing: false },
+                    { id: Date.now() + 21, time: '20:00', activity: '函館山 百萬夜景 🌃', editing: false },
+                ],
+                day5: [ 
+                    { id: Date.now() + 22, time: '08:00', activity: '元氣朝市 (海鮮朝市，享用海鮮丼)', editing: false },
+                    { id: Date.now() + 23, time: '11:00', activity: '退房，前往函館機場', editing: false },
+                    { id: Date.now() + 24, time: '13:00', activity: '函館機場 ✈️ 桃園機場 (賦歸)', editing: false },
+                ]
+            });
+
+            const currentItinerary = computed(() => {
+                const current = itineraryData.value[currentTab.value] || [];
+                // 依時間排序
+                return current.sort((a, b) => a.time.localeCompare(b.time));
+            });
+
+            const editItem = (item) => {
+                // 儲存原始數據以供取消編輯時使用
+                item.originalTime = item.time;
+                item.originalActivity = item.activity;
+                item.editing = true;
+            };
+
+            const saveItem = (item) => {
+                if (item.time.trim() && item.activity.trim()) {
+                    item.editing = false;
+                    delete item.originalTime;
+                    delete item.originalActivity;
+                } else {
+                    alert('時間和地點/活動都不能為空！');
+                }
+            };
+            
+            const cancelEdit = (item, index) => {
+                if (item.id.toString().startsWith('new')) {
+                    // 如果是新增狀態下取消，則刪除該項目
+                    itineraryData.value[currentTab.value].splice(index, 1);
+                } else {
+                    // 恢復到編輯前的狀態
+                    item.time = item.originalTime;
+                    item.activity = item.originalActivity;
+                    item.editing = false;
+                    delete item.originalTime;
+                    delete item.originalActivity;
+                }
+            };
+
+            const deleteItem = (id) => {
+                if (confirm('確定要刪除此行程項目嗎？')) {
+                    itineraryData.value[currentTab.value] = itineraryData.value[currentTab.value].filter(item => item.id !== id);
+                }
+            };
+
+            const openAddItem = () => {
+                // 檢查是否已有正在編輯的新項目
+                if (currentItinerary.value.some(item => item.id.toString().startsWith('new'))) {
+                    alert('請先儲存或取消目前正在新增的項目。');
+                    return;
+                }
+                const newItem = {
+                    id: 'new' + Date.now(), // Use 'new' prefix for easy identification
+                    time: '',
+                    activity: '',
+                    editing: true
+                };
+                itineraryData.value[currentTab.value].push(newItem);
+            };
+
+
+            // --- 3. Accounting System State & Logic ---
+            const exchangeRateTWD = 0.2215; // JPY 1 = TWD 0.2215 (Hardcoded for single-file simplicity)
+            const accountingData = ref([]);
+            const newTransaction = reactive({
+                description: '',
+                amountJPY: null,
+                category: ''
+            });
+
+            const sortedAccountingData = computed(() => {
+                // 依 ID (時間戳) 降冪排列 (最新的在上面)
+                return accountingData.value.slice().sort((a, b) => b.id - a.id);
+            });
+
+            const totalJPY = computed(() => {
+                return accountingData.value.reduce((sum, tx) => sum + tx.amountJPY, 0);
+            });
+
+            const totalTWD = computed(() => {
+                return totalJPY.value * exchangeRateTWD;
+            });
+
+            const addTransaction = () => {
+                if (!newTransaction.description || newTransaction.amountJPY <= 0 || !newTransaction.category) {
+                    alert('請填寫完整的交易資訊 (描述、金額和類別)！');
+                    return;
+                }
+                accountingData.value.push({
+                    id: Date.now(),
+                    description: newTransaction.description,
+                    amountJPY: newTransaction.amountJPY,
+                    amountTWD: newTransaction.amountJPY * exchangeRateTWD,
+                    category: newTransaction.category,
+                    date: new Date().toISOString()
+                });
+
+                // Reset form
+                newTransaction.description = '';
+                newTransaction.amountJPY = null;
+                newTransaction.category = '';
+            };
+
+            const deleteTransaction = (id) => {
+                if (confirm('確定要刪除此筆交易紀錄嗎？')) {
+                    accountingData.value = accountingData.value.filter(tx => tx.id !== id);
+                }
+            };
+
+            const getCategoryColor = (category) => {
+                const colorMap = {
+                    'Food': 'bg-yellow-200 text-yellow-800',
+                    'Shopping': 'bg-pink-200 text-pink-800',
+                    'Transport': 'bg-indigo-200 text-indigo-800',
+                    'Hotel': 'bg-teal-200 text-teal-800',
+                    'Other': 'bg-gray-200 text-gray-800',
+                };
+                return colorMap[category] || 'bg-gray-200 text-gray-800';
+            };
+            
+            const getCategoryEmoji = (category) => {
+                const emojiMap = {
+                    'Food': '🍜',
+                    'Shopping': '🛍️',
+                    'Transport': '🚌',
+                    'Hotel': '🏨',
+                    'Other': '💡',
+                };
+                return emojiMap[category] || '❓';
+            };
+
+
+            // --- 4. Packing List State & Logic ---
+            const packingList = ref([
+                { id: 1, name: '護照 ✈️', packed: false },
+                { id: 2, name: '日幣現金 💴', packed: false },
+		{ id: 3, name: '台幣現金 💵', packed: false },
+                { id: 4, name: '厚外套/羽絨衣 🧥', packed: false },
+                { id: 5, name: '保暖手套/帽子 🧤', packed: false },
+                { id: 6, name: '雪靴 👢/拖鞋', packed: false },
+                { id: 7, name: '插頭&充電線 🔌', packed: false },
+            ]);
+            const newItemName = ref('');
+
+            const packedCount = computed(() => {
+                return packingList.value.filter(item => item.packed).length;
+            });
+
+            const addPackingItem = () => {
+                if (newItemName.value.trim()) {
+                    packingList.value.push({
+                        id: Date.now(),
+                        name: newItemName.value.trim(),
+                        packed: false
+                    });
+                    newItemName.value = '';
+                }
+            };
+
+            const togglePackingItem = (id) => {
+                const item = packingList.value.find(item => item.id === id);
+                if (item) {
+                    item.packed = !item.packed;
+                }
+            };
+
+            const deletePackingItem = (id) => {
+                if (confirm('確定要刪除此物品嗎？')) {
+                    packingList.value = packingList.value.filter(item => item.id !== id);
+                }
+            };
+
+
+            // --- 5. Weather State & Logic ---
+            const weatherData = ref({});
+            const showWeatherDetail = ref(false);
+
+            const fetchWeather = async () => {
+                for (const day in weatherLocations) {
+                    const { lat, lon, location, desc } = weatherLocations[day];
+                    try {
+                        // 使用 Open-Meteo API 獲取當前天氣
+                        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Asia%2FTokyo`);
+                        const data = await response.json();
+                        const temp = Math.round(data.current_weather.temperature);
+                        const code = data.current_weather.weathercode;
+                        
+                        weatherData.value[day] = {
+                            location: location,
+                            temp: temp,
+                            icon: getWeatherIcon(code),
+                            desc: desc
+                        };
+                    } catch (error) {
+                        console.error(`Error fetching weather for ${location}`, error);
+                        weatherData.value[day] = { location, temp: 'N/A', icon: '❓', desc: '無法取得數據' };
+                    }
+                }
+            };
+
+            const weatherDisplay = computed(() => {
+                // 只有在行程頁籤才顯示該日期的天氣
+                if (currentTab.value.startsWith('day')) {
+                    return weatherData.value[currentTab.value];
+                }
+                return null;
+            });
+
+            const toggleWeatherDetail = () => {
+                showWeatherDetail.value = !showWeatherDetail.value;
+            };
+
+            // --- 6. Persistence (LocalStorage) ---
+            const saveToLocalStorage = () => {
+                const data = {
+                    itinerary: itineraryData.value,
+                    accounting: accountingData.value,
+                    packing: packingList.value,
+                    version: '5-day-trip' // 新增版本標籤，確保行程覆蓋
+                };
+                localStorage.setItem(APP_KEY, JSON.stringify(data));
+            };
+
+            const loadFromLocalStorage = () => {
+                const saved = localStorage.getItem(APP_KEY);
+                if (saved) {
+                    const data = JSON.parse(saved);
+
+                    // 檢查版本標籤。如果版本不一致，則只載入記帳和清單，行程保留新版預設
+                    if (data.version !== '5-day-trip') {
+                         console.warn("Local storage itinerary version mismatch. Keeping new default itinerary.");
+                    } else {
+                        itineraryData.value = data.itinerary || itineraryData.value;
+                    }
+                    
+                    accountingData.value = data.accounting || [];
+                    packingList.value = data.packing || packingList.value;
+                }
+            };
+            
+            // Watchers to auto-save data
+            watch(itineraryData, saveToLocalStorage, { deep: true });
+            watch(accountingData, saveToLocalStorage, { deep: true });
+            watch(packingList, saveToLocalStorage, { deep: true }); 
+
+            // --- Lifecycle Hooks ---
+            onMounted(() => {
+                loadFromLocalStorage();
+                fetchWeather();
+            });
+
+            return {
+                currentTab,
+                dayName,
+                tabs,
+                // Itinerary
+                itineraryData,
+                currentItinerary,
+                editItem,
+                saveItem,
+                cancelEdit,
+                deleteItem,
+                openAddItem,
+                // Links
+                generateGoogleMapsUrl,
+                generateWebsiteSearchUrl,
+                openLink,
+                // Accounting
+                exchangeRateTWD,
+                accountingData,
+                newTransaction,
+                totalJPY,
+                totalTWD,
+                sortedAccountingData,
+                addTransaction,
+                deleteTransaction,
+                getCategoryColor,
+                getCategoryEmoji,
+                // Packing List
+                packingList,
+                newItemName,
+                packedCount,
+                addPackingItem,
+                togglePackingItem,
+                deletePackingItem,
+                // Weather
+                weatherDisplay,
+                showWeatherDetail,
+                toggleWeatherDetail
+            };
+        }
+    }).mount('#app');
+</script>
+
+</body>
+</html>
