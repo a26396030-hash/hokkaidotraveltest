@@ -88,12 +88,6 @@
 
             <div v-if="currentTab.startsWith('day')" class="min-h-[400px] relative">
                 
-                <button v-if="currentTab === 'day1'" @click="showFlightModal = true"
-                        class="mb-4 w-full py-2 bg-red-500 text-white rounded-lg font-bold shadow-lg hover:bg-red-600 transition duration-200 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                    航班資訊 ✈️ (點擊查看)
-                </button>
-                
                 <h2 class="text-2xl font-bold text-blue-800 border-b-2 border-blue-200 pb-3 mb-4 flex items-center">
                     {{ dayName }} 行程表 <span class="text-lg ml-3 text-blue-500">（點擊編輯按鈕即可修改）</span>
                 </h2>
@@ -301,6 +295,40 @@
 
 
             </div>
+
+            <div v-else-if="currentTab === 'flight'" class="min-h-[400px]">
+                <h2 class="text-2xl font-bold text-red-700 border-b-2 border-red-200 pb-3 mb-4 flex items-center">
+                    ✈️ 航班資訊詳情
+                </h2>
+                
+                <div class="space-y-6">
+                    <div class="p-4 bg-red-50 rounded-xl border-l-4 border-red-400 shadow-md">
+                        <p class="font-bold text-xl text-red-600 mb-2">🛫 12月6日 (週五) - 去程</p>
+                        <ul class="text-gray-700 space-y-1 text-base ml-4 list-disc">
+                            <li><span class="font-semibold">航空公司/班號:</span> 台灣虎航 IT238</li>
+                            <li><span class="font-semibold">起飛地:</span> 桃園國際機場 (TPE)</li>
+                            <li><span class="font-semibold">目的地:</span> 旭川機場 (AKJ)</li>
+                            <li><span class="font-semibold">預計起飛/抵達:</span> 09:30 / 14:30</li>
+                            <li><span class="font-semibold text-blue-500">備註:</span> 抵達旭川後需前往洞爺湖，請預留充足轉車時間。</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-4 bg-blue-50 rounded-xl border-l-4 border-blue-400 shadow-md">
+                        <p class="font-bold text-xl text-blue-600 mb-2">🛬 12月10日 (週二) - 回程</p>
+                        <ul class="text-gray-700 space-y-1 text-base ml-4 list-disc">
+                            <li><span class="font-semibold">航空公司/班號:</span> 台灣虎航 IT239</li>
+                            <li><span class="font-semibold">起飛地:</span> 函館機場 (HKD)</li>
+                            <li><span class="font-semibold">目的地:</span> 桃園國際機場 (TPE)</li>
+                            <li><span class="font-semibold">預計起飛/抵達:</span> 15:30 / 19:30</li>
+                            <li><span class="font-semibold text-red-500">備註:</span> 需提前從市區前往函館機場，注意退房時間。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="text-center text-gray-400 py-10">
+                    <p>所有時間請以最終航空公司通知為準。</p>
+                </div>
+            </div>
             
         </div>
     </div>
@@ -357,52 +385,6 @@
                     </button>
                 </div>
 
-            </div>
-        </div>
-    </transition>
-    <transition name="modal">
-        <div v-if="showFlightModal" class="modal-overlay" @click.self="showFlightModal = false">
-            <div class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-lg mx-auto transform transition-all duration-300 scale-100" @click.stop>
-                <div class="flex justify-between items-center border-b pb-3 mb-4">
-                    <h3 class="text-xl font-bold text-red-700 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.168 1.342L10 18.577l7.553-1.682a1 1 0 00.518-1.579l-7-14z"/></svg>
-                        航班資訊詳情
-                    </h3>
-                    <button @click="showFlightModal = false" class="text-gray-400 hover:text-gray-600 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                </div>
-
-                <div class="space-y-6">
-                    <div class="p-4 bg-red-50 rounded-lg border-l-4 border-red-400 shadow-sm">
-                        <p class="font-bold text-lg text-red-600 mb-2">🛫 12月6日 (週五) - 去程</p>
-                        <ul class="text-gray-700 space-y-1 text-sm">
-                            <li><span class="font-semibold">航空公司/班號:</span> 台灣虎航 IT238</li>
-                            <li><span class="font-semibold">起飛地:</span> 桃園國際機場 (TPE)</li>
-                            <li><span class="font-semibold">目的地:</span> 旭川機場 (AKJ)</li>
-                            <li><span class="font-semibold">預計起飛/抵達:</span> 09:30 / 14:30 (時間以實際機票為主)</li>
-                            <li><span class="font-semibold text-blue-500">備註:</span> 抵達旭川後需前往洞爺湖，請預留充足轉車時間。</li>
-                        </ul>
-                    </div>
-
-                    <div class="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400 shadow-sm">
-                        <p class="font-bold text-lg text-blue-600 mb-2">🛬 12月10日 (週二) - 回程</p>
-                        <ul class="text-gray-700 space-y-1 text-sm">
-                            <li><span class="font-semibold">航空公司/班號:</span> 台灣虎航 IT239</li>
-                            <li><span class="font-semibold">起飛地:</span> 函館機場 (HKD)</li>
-                            <li><span class="font-semibold">目的地:</span> 桃園國際機場 (TPE)</li>
-                            <li><span class="font-semibold">預計起飛/抵達:</span> 15:30 / 19:30 (時間以實際機票為主)</li>
-                            <li><span class="font-semibold text-red-500">備註:</span> 需提前從市區前往函館機場，注意退房時間。</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="flex justify-end mt-4">
-                    <button @click="showFlightModal = false"
-                            class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg font-semibold hover:bg-gray-400 transition">
-                        關閉
-                    </button>
-                </div>
             </div>
         </div>
     </transition>
@@ -484,6 +466,7 @@
                 const dayMap = {
                     'day1': '第一天 (12/6)', 'day2': '第二天 (12/7)', 'day3': '第三天 (12/8)', 
                     'day4': '第四天 (12/9)', 'day5': '第五天 (12/10)', 
+                    'flight': '航班資訊',
                     'accounting': '記帳系統', 'packing': '必帶物品清單'
                 };
                 return dayMap[currentTab.value] || '行程';
@@ -494,6 +477,7 @@
                 { id: 'day3', name: '12/8', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
                 { id: 'day4', name: '12/9', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
                 { id: 'day5', name: '12/10', inactiveClass: 'bg-white text-blue-700 hover:bg-blue-100', activeClass: 'bg-blue-600 text-white' },
+                { id: 'flight', name: '✈️ 航班', inactiveClass: 'bg-red-100 text-red-700 hover:bg-red-200', activeClass: 'bg-red-600 text-white' },
                 { id: 'accounting', name: '💰 記帳', inactiveClass: 'bg-yellow-100 text-green-700 hover:bg-yellow-200', activeClass: 'bg-green-600 text-white' },
                 { id: 'packing', name: '🎒 清單', inactiveClass: 'bg-purple-100 text-purple-700 hover:bg-purple-200', activeClass: 'bg-purple-600 text-white' },
             ];
@@ -603,7 +587,7 @@
                 itineraryData.value[currentTab.value].push(newItem);
             };
             
-            // --- 2.1 Notes Modal Logic (New) ---
+            // --- 2.1 Notes Modal Logic ---
             const showNotesModal = ref(false);
             const selectedItem = ref({}); // Current item being edited
 
@@ -614,12 +598,8 @@
 
             const closeNotesModal = () => {
                 showNotesModal.value = false;
-                // 因為 selectedItem 是物件引用 (reference)，備註已經在 v-model 時自動更新到 itineraryData 了
             };
             
-            // --- 2.2 Flight Info Modal Logic (NEW) ---
-            const showFlightModal = ref(false);
-
 
             // --- 3. Accounting System State & Logic ---
             const exchangeRateTWD = 0.2215; // JPY 1 = TWD 0.2215 (Hardcoded for single-file simplicity)
@@ -873,8 +853,6 @@
                 selectedItem,
                 openNotesModal,
                 closeNotesModal,
-                // Flight Modal (NEW)
-                showFlightModal,
                 // Accounting
                 exchangeRateTWD,
                 accountingData,
