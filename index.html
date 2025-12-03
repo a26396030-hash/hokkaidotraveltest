@@ -27,12 +27,12 @@
             background: linear-gradient(to bottom, #a1c4fd 0%, #c2e9fb 100%);
         }
 
-        /* 浮動天氣按鈕的動畫 */
-        .weather-float-btn {
+        /* 浮動按鈕的動畫 */
+        .float-btn {
             transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer;
         }
-        .weather-float-btn:hover {
+        .float-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
@@ -314,8 +314,8 @@
                             <li><span class="font-semibold">航空公司/班號:</span> 台灣虎航 IT238</li>
                             <li><span class="font-semibold">起飛地:</span> 桃園國際機場 (TPE)</li>
                             <li><span class="font-semibold">目的地:</span> 旭川機場 (AKJ)</li>
-                            <li><span class="font-semibold">預計起飛/抵達:</span> 07:35 / 12:30</li>
-                            <li><span class="font-semibold text-blue-500">備註:</span> 抵達旭川機場後前往洞爺湖約需4小時。</li>
+                            <li><span class="font-semibold">預計起飛/抵達:</span> 09:30 / 14:30</li>
+                            <li><span class="font-semibold text-blue-500">備註:</span> 抵達旭川後需前往洞爺湖，請預留充足轉車時間。</li>
                         </ul>
                     </div>
 
@@ -325,8 +325,8 @@
                             <li><span class="font-semibold">航空公司/班號:</span> 台灣虎航 IT239</li>
                             <li><span class="font-semibold">起飛地:</span> 函館機場 (HKD)</li>
                             <li><span class="font-semibold">目的地:</span> 桃園國際機場 (TPE)</li>
-                            <li><span class="font-semibold">預計起飛/抵達:</span> 12:20 / 16:00</li>
-                            <li><span class="font-semibold text-red-500">備註:</span> 元氣朝市前往函館機場約需20分鐘。</li>
+                            <li><span class="font-semibold">預計起飛/抵達:</span> 15:30 / 19:30</li>
+                            <li><span class="font-semibold text-red-500">備註:</span> 需提前從市區前往函館機場，注意退房時間。</li>
                         </ul>
                     </div>
                 </div>
@@ -338,7 +338,7 @@
             
         </div>
     </div>
-
+    
     <div class="fixed bottom-4 right-4 z-50 flex flex-col space-y-2 items-end">
         
         <div @click="showGuideModal = true"
@@ -405,7 +405,6 @@
             </div>
         </div>
     </transition>
-    
     <transition name="modal">
         <div v-if="showNotesModal" class="modal-overlay" @click.self="closeNotesModal">
             <div class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-lg mx-auto transform transition-all duration-300 scale-100" @click.stop>
