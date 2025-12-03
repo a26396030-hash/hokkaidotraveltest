@@ -735,7 +735,7 @@
             // --- 4. Packing List State & Logic ---
             const newCategory = ref('carryon'); // Default new item to carry-on
             const packingList = ref([
-                // Carry-on items
+                // Carry-on items (根據您的新列表更新)
                 { id: 1, name: '護照 ✈️', packed: false, category: 'carryon' },
                 { id: 2, name: '日幣現金 💴', packed: false, category: 'carryon' },
                 { id: 3, name: '台幣現金 💵', packed: false, category: 'carryon' },
@@ -748,18 +748,19 @@
                 { id: 10, name: '口罩 (非必要)', packed: false, category: 'carryon' },
                 { id: 11, name: '墨鏡 🕶️', packed: false, category: 'carryon' },
                 { id: 12, name: '羽絨背心/羽絨外套 🧥', packed: false, category: 'carryon' },
+                { id: 20, name: '睡衣', packed: false, category: 'carryon' },
+                { id: 23, name: '暖暖包 (各自需求數量)', packed: false, category: 'carryon' },
+                
+                // Checked items (根據您的新列表更新)
                 { id: 13, name: '個人藥品 💊', packed: false, category: 'checked' },
-                // Checked items
                 { id: 14, name: '發熱衣 (1-2件)', packed: false, category: 'checked' },
                 { id: 15, name: '發熱褲 (1-2件)', packed: false, category: 'checked' },
                 { id: 16, name: '毛衣/帽T/厚上衣 (2-3套) 👕', packed: false, category: 'checked' },
                 { id: 17, name: '褲子 (3-4件) 👖', packed: false, category: 'checked' },
                 { id: 18, name: '內衣褲4套', packed: false, category: 'checked' },
                 { id: 19, name: '毛巾', packed: false, category: 'checked' },
-                { id: 20, name: '睡衣', packed: false, category: 'carryon' },
                 { id: 21, name: '化妝品 💄', packed: false, category: 'checked' },
                 { id: 22, name: '保養品 🧴', packed: false, category: 'checked' },
-                { id: 23, name: '暖暖包 (各自需求數量)', packed: false, category: 'carryon' },
                 { id: 24, name: '常備藥品 💊', packed: false, category: 'checked' },
                 
             ]);
@@ -814,7 +815,6 @@
                     });
                 }
             };
-
 
             // --- 5. Weather State & Logic ---
             const weatherData = ref({});
