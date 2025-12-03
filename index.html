@@ -338,6 +338,73 @@
             
         </div>
     </div>
+
+    <div class="fixed bottom-4 right-4 z-50 flex flex-col space-y-2 items-end">
+        
+        <div @click="showGuideModal = true"
+             class="float-btn bg-indigo-500 text-white w-16 h-16 rounded-full flex flex-col items-center justify-center text-xs shadow-lg ring-4 ring-white">
+            <span class="text-2xl">👤</span>
+            <span class="font-bold">導遊</span>
+        </div>
+
+        <div v-if="weatherDisplay && currentTab.startsWith('day')"
+             class="relative">
+            <div @click="toggleWeatherDetail"
+                 class="float-btn bg-yellow-400 text-white w-16 h-16 rounded-full flex flex-col items-center justify-center text-xs shadow-lg ring-4 ring-white">
+                <span class="text-2xl">{{ weatherDisplay.icon }}</span>
+                <span class="font-bold">{{ weatherDisplay.temp }}°C</span>
+            </div>
+            
+            <div v-if="showWeatherDetail"
+                 class="absolute right-0 bottom-20 z-20 p-4 bg-white rounded-xl shadow-xl border-2 border-blue-400 w-48 transition-all duration-300 transform origin-bottom-right">
+                <p class="font-bold text-blue-700">{{ weatherDisplay.location }}</p>
+                <p class="text-4xl my-1">{{ weatherDisplay.icon }}</p>
+                <p class="text-3xl font-extrabold text-gray-800">{{ weatherDisplay.temp }}°C</p>
+                <p class="text-sm text-gray-500">{{ weatherDisplay.desc }}</p>
+                <button @click="showWeatherDetail = false" class="text-xs text-red-500 mt-2">關閉</button>
+            </div>
+        </div>
+        
+    </div>
+    <transition name="modal">
+        <div v-if="showGuideModal" class="modal-overlay" @click.self="showGuideModal = false">
+            <div class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-sm mx-auto transform transition-all duration-300 scale-100" @click.stop>
+                <div class="flex justify-between items-center border-b pb-3 mb-4">
+                    <h3 class="text-xl font-bold text-indigo-700">👤 領隊資訊</h3>
+                    <button @click="showGuideModal = false" class="text-gray-400 hover:text-gray-600 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <span class="text-gray-500 w-20 font-medium">姓名:</span>
+                        <span class="font-bold text-lg text-gray-800">黃國卿先生</span>
+                    </div>
+                    <div class="flex items-center border-t border-gray-200 pt-2">
+                        <span class="text-gray-500 w-20 font-medium">台灣手機:</span>
+                        <a :href="`tel:${guideInfo.twPhone}`" class="text-blue-500 hover:text-blue-700 font-semibold transition">
+                            {{ guideInfo.twPhone }}
+                        </a>
+                    </div>
+                    <div class="flex items-center border-t border-gray-200 pt-2">
+                        <span class="text-gray-500 w-20 font-medium">日本手機:</span>
+                        <a :href="`tel:${guideInfo.jpPhone}`" class="text-blue-500 hover:text-blue-700 font-semibold transition">
+                            {{ guideInfo.jpPhone }}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex justify-end mt-5">
+                    <button @click="showGuideModal = false"
+                            class="px-4 py-2 bg-indigo-500 text-white rounded-lg font-semibold hover:bg-indigo-600 transition">
+                        我知道了
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </transition>
     
     <div v-if="weatherDisplay && currentTab.startsWith('day')"
          class="fixed bottom-4 right-4 z-50">
